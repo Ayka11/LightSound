@@ -15,7 +15,7 @@ from docx import Document
 import PyPDF2
 import pdfplumber
 
-import sounddevice as sd
+#import sounddevice as sd
 from scipy.io.wavfile import write
 import matplotlib.pyplot as plt
 from scipy.fft import fft
