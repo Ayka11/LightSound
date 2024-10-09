@@ -1,5 +1,8 @@
-matplotlib
-librosa
-scipy
 flask
+librosa
+matplotlib
+numpy
+python-docx
+pypdf2
+pdfplumber
 sounddevice
