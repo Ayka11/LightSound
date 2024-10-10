@@ -269,6 +269,39 @@ frequency_colors = {
     # Add remaining unique ranges and colors...
 }
 
+frequency_colors = {
+    (100, 200): (255, 0, 0),           # /m/ as in "mat" (Red)
+    (100, 200): (139, 0, 0),           # /p/ as in "pat" (Dark Red)
+    (100, 300): (255, 127, 80),        # /b/ as in "bat" (Coral)
+    (200, 400): (255, 165, 0),         # /d/ as in "dog" (Orange)
+    (200, 600): (255, 215, 0),         # /g/ as in "go" (Gold)
+    (200, 600): (255, 255, 0),         # /n/ as in "no" (Yellow)
+    (200, 1000): (255, 255, 224),      # /w/ as in "wet" (Light Yellow)
+    (200, 1000): (255, 250, 205),      # /r/ as in "rat" (Lemon)
+    (200, 1000): (0, 255, 0),          # ‘ŋ’ (as in "sing") (Green)
+    (700, 1100): (0, 100, 0),          # /ɑ/ as in "father" (Dark Green)
+    (300, 1500): (50, 205, 50),        # /o/ as in "pot" (Lime)
+    (1000, 2000): (128, 128, 0),       # /h/ as in "hat" (Olive)
+    (1000, 3000): (189, 252, 201),     # ‘ð’ (as in "this") (Mint)
+    (400, 2000): (0, 255, 255),        # /e/ as in "bed" (Light Blue)
+    (250, 2000): (64, 224, 208),       # /u/ as in "put" (Turquoise)
+    (250, 3000): (46, 139, 87),        # /i/ as in "sit" (Sea Wave)
+    (500, 2500): (135, 206, 235),      # /a/ as in "cat" (Sky Blue)
+    (300, 3000): (0, 0, 255),          # /l/ as in "lamp" (Blue)
+    (300, 3000): (0, 0, 139),          # /t/ as in "top" (Dark Blue)
+    (500, 1500): (65, 105, 225),       # ‘ʌ’ (as in "cup") (Royal Blue)
+    (500, 1500): (128, 0, 128),        # ‘ə’ (as in "sofa") (Violet)
+    (500, 2500): (221, 160, 221),      # /j/ as in "jump" (Plum)
+    (500, 2500): (230, 230, 250),      # ‘æ’ (as in "cat") (Lavender)
+    (1500, 4000): (255, 0, 255),       # /k/ as in "kite" (Magenta)
+    (1700, 2000): (139, 0, 139),       # /f/ as in "fish" (Dark Magenta)
+    (200, 5000): (255, 192, 203),      # /v/ as in "vet" (Pink)
+    (2000, 5000): (255, 182, 193),     # /s/ as in "sat" (Light Pink)
+    (2000, 5000): (250, 128, 114),     # ‘ʒ’ (as in "measure") (Salmon)
+    (2000, 8000): (210, 105, 30),      # /ʃ/ as in "she" (Chocolate)
+    (3000, 7000): (165, 42, 42),       # /z/ as in "zoo" (Brown)
+    (6000, 8000): (255, 140, 0)        # ‘θ’ (as in "thin") (Dark Orange)
+}
 
 # Extract frequencies and their colors
 freqs = list(frequency_colors.keys())
@@ -354,8 +387,8 @@ def process_audio(audio_data):
     plt.title('Frequency Spectrum', fontsize=12)
     plt.xlabel('Frequency (Hz)', fontsize=12)
     plt.ylabel('Amplitude', fontsize=12)
-    #plt.ylim([0,.7*np.max(P1)])
-    #plt.xlim([np.min(ff),min(500,np.max(ff))])
+    plt.ylim([0,.7*np.max(P1)])
+    plt.xlim([np.min(ff),min(1000,np.max(ff))])
     plt.grid(True)
     plt.legend(notes, loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=12, fontsize='small')
 
