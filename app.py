@@ -294,23 +294,29 @@ def record():
 
 
 def process_audio(audio_data):
+    if audio_data.ndim > 1 and audio_data.shape[1] > 1:
+        print("Audio has more than one channel. Using the first channel.")
+        audio_data = audio_data[:, 0]  # Select the first channel
     L = len(audio_data)
     Y = fft(audio_data.flatten())
     P2 = np.abs(Y / L)
     P1 = P2[:L // 2 + 1]
     P1[1:-1] = 2 * P1[1:-1]
-    f = Fs * np.arange((L // 2) + 1) / L
+    f = Fs * np.arange((L // 4) + 1) / L
+    
 
     # Plot the frequency spectrum
     plt.figure(figsize=(12, 6))
     for i, (freq_range, color) in enumerate(zip(freqs, colors)):
         idx = np.where((f >= freq_range[0]) & (f < freq_range[1]))
-        if idx[0].size > 0:
+        if idx[0].size > 0 :
+            
             plt.plot(f[idx], P1[idx], color=np.array(color) / 255.0, linewidth=1.5)
 
     plt.title('Frequency Spectrum', fontsize=12)
     plt.xlabel('Frequency (Hz)', fontsize=12)
     plt.ylabel('Amplitude', fontsize=12)
+    plt.ylim([0,.7*np.max(P1)])
     plt.grid(True)
     plt.legend(notes, loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=12, fontsize='small')
 
