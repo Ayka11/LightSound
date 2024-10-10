@@ -306,18 +306,19 @@ def process_audio(audio_data):
     
 
     # Plot the frequency spectrum
+    ff=[]
     plt.figure(figsize=(12, 6))
     for i, (freq_range, color) in enumerate(zip(freqs, colors)):
         idx = np.where((f >= freq_range[0]) & (f < freq_range[1]))
         if idx[0].size > 0 :
-            
+            ff.extend(f[idx])
             plt.plot(f[idx], P1[idx], color=np.array(color) / 255.0, linewidth=1.5)
 
     plt.title('Frequency Spectrum', fontsize=12)
     plt.xlabel('Frequency (Hz)', fontsize=12)
     plt.ylabel('Amplitude', fontsize=12)
     plt.ylim([0,.7*np.max(P1)])
-    plt.xlim([0,500])
+    plt.xlim([np.min(ff),min(500,np.max(ff))])
     plt.grid(True)
     plt.legend(notes, loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=12, fontsize='small')
 
