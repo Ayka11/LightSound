@@ -253,6 +253,23 @@ frequency_colors = {
     (6000, 8000): (255, 140, 0)        # Dark Orange
 }
 
+frequency_colors = {
+    (100, 200): (255, 0, 0),           # Red
+    (100, 300): (139, 0, 0),           # Dark Red
+    (200, 300): (255, 127, 80),        # Coral
+    (200, 400): (255, 165, 0),         # Orange
+    (200, 600): (255, 215, 0),         # Gold
+    (200, 1000): (255, 255, 0),        # Yellow
+    (200, 5000): (255, 192, 203),      # Pink
+    (2000, 5000): (255, 182, 193),     # Light Pink
+    (2000, 8000): (250, 128, 114),     # Salmon
+    (300, 1500): (0, 100, 0),          # Dark Green
+    (3000, 7000): (210, 105, 30),      # Chocolate
+    (6000, 8000): (255, 140, 0)        # Dark Orange
+    # Add remaining unique ranges and colors...
+}
+
+
 # Extract frequencies and their colors
 freqs = list(frequency_colors.keys())
 colors = list(frequency_colors.values())
@@ -302,23 +319,43 @@ def process_audio(audio_data):
     P2 = np.abs(Y / L)
     P1 = P2[:L // 2 + 1]
     P1[1:-1] = 2 * P1[1:-1]
-    f = Fs * np.arange((L // 4) + 1) / L
+    f = Fs * np.arange((L // 2) + 1) / L
     
 
     # Plot the frequency spectrum
     ff=[]
+    width=2
     plt.figure(figsize=(12, 6))
     for i, (freq_range, color) in enumerate(zip(freqs, colors)):
         idx = np.where((f >= freq_range[0]) & (f < freq_range[1]))
         if idx[0].size > 0 :
             ff.extend(f[idx])
+
+            ''' 
+            fmean = np.mean(f[idx])
+            fmax = np.max(f[idx])
+            fmin = np.min(f[idx])
+            
+            #plt.bar([fmax,fmax], [np.min(P1[idx]),np.max(P1[idx])], width=width, color=np.array(color)/255.0, edgecolor='black', alpha=0.6)
+            #plt.bar([fmean,fmean], [np.min(P1[idx]),np.mean(P1[idx])], width=width, color=np.array(color)/255.0, edgecolor='black', alpha=0.6)
+            #plt.bar([fmin,fmin], [0,np.min([idx])], width=width, color=np.array(color)/255.0, edgecolor='black', alpha=0.6)
+
+            p=100
+            for i in range(p):
+                x=np.random.choice(np.arange(p))
+                fr=f[idx][x]
+                pr=P1[idx][x]
+                plt.bar([fr,fr], [0,pr], width=width, color=np.array(color)/255.0, edgecolor='black', alpha=0.6)
+            
+            #plt.bar(f[idx], P1[idx], width=width, color=np.array(color)/255.0, edgecolor='black', alpha=0.6)
+            '''
             plt.plot(f[idx], P1[idx], color=np.array(color) / 255.0, linewidth=1.5)
 
     plt.title('Frequency Spectrum', fontsize=12)
     plt.xlabel('Frequency (Hz)', fontsize=12)
     plt.ylabel('Amplitude', fontsize=12)
-    plt.ylim([0,.7*np.max(P1)])
-    plt.xlim([np.min(ff),min(500,np.max(ff))])
+    #plt.ylim([0,.7*np.max(P1)])
+    #plt.xlim([np.min(ff),min(500,np.max(ff))])
     plt.grid(True)
     plt.legend(notes, loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=12, fontsize='small')
 
