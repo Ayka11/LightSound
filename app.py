@@ -14,14 +14,14 @@ import string
 from docx import Document
 import PyPDF2
 import pdfplumber
-
+import soundfile as sf
 #import sounddevice as sd
 from scipy.io.wavfile import write
 import matplotlib.pyplot as plt
 from scipy.fft import fft
 import io
 import base64
-
+from pydub import AudioSegment
 
 app = Flask(__name__)
 
@@ -139,6 +139,15 @@ def upload_audio():
         return render_template('index.html', error="No selected file")
     if file:
         y, sr = librosa.load(file)
+
+        
+        #y = y.reshape(-1, 1)
+
+        if y.ndim > 1 and y.shape[1] > 1:
+            print("Audio has more than one channel. Using the first channel.")
+            y = y[:, 0]  # Select the first channel
+    
+
         
         D = np.abs(librosa.stft(y))
         D_db = librosa.amplitude_to_db(D, ref=np.max)
@@ -161,6 +170,22 @@ def upload_audio():
         plt.savefig(buf, format='png', bbox_inches='tight', pad_inches=0)
         buf.seek(0)
         plot_url = base64.b64encode(buf.getvalue()).decode()
+
+        # Save the uploaded file temporarily
+        temp_filename = 'uploaded_audio.wav' if file.filename.endswith('.wav') else 'uploaded_audio.mp3'
+        file.save(temp_filename)
+        
+        #if temp_filename.endswith('.mp3'):
+        #    audio_segment = AudioSegment.from_mp3(file)
+        #    audio_segment.export(temp_filename, format='wav')
+
+        # Read audio data using soundfile
+        #audio_data, sample_rate = sf.read(temp_filename)
+
+        #audio_data = np.array(audio_segment.get_array_of_samples())
+        #audio_data = audio_data.reshape(-1, 1)
+                
+        #y,sr = sf.read(file)
         plot_url2 = process_audio(y)
 
         return render_template('color_representation.html', plot_url=plot_url,plot_url2=plot_url2)
@@ -399,7 +424,7 @@ frequency_colors = {
 freqs = list(frequency_colors.keys())
 colors = list(frequency_colors.values())
 
-import soundfile as sf
+
 
 @app.route('/record', methods=['GET', 'POST'])
 def record():
@@ -434,7 +459,6 @@ def record():
 
     return render_template('frequency_plot.html', spectrum_image=None)
 
-
 def process_audio(audio_data):
     if audio_data.ndim > 1 and audio_data.shape[1] > 1:
         print("Audio has more than one channel. Using the first channel.")
@@ -458,22 +482,24 @@ def process_audio(audio_data):
             ff.extend(f[idx])
             rr.extend(P1[idx])
 
-            num_samples = 200  # Number of samples to plot
+            num_samples = 5  # Number of samples to plot
             selected_indices = np.random.choice(idx[0], size=min(num_samples, idx[0].size), replace=False)
                     
-            plt.bar([np.mean(f[idx]),np.mean(f[idx])], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=2)
-            plt.bar([np.min(f[idx]),np.min(f[idx])], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=2)
-            plt.bar([np.max(f[idx]),np.max(f[idx])], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=2)
+            plt.bar([np.mean(f[idx]),np.mean(f[idx])], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=5)
+            plt.bar([np.min(f[idx]),np.min(f[idx])], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=5)
+            plt.bar([np.max(f[idx]),np.max(f[idx])], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=5)
 
-            #plt.bar([np.mean(f[idx]),np.mean(f[idx])], [0.8*np.max(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=1.5)
-            #plt.bar([np.min(f[idx]),np.min(f[idx])], [0.8*np.max(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=1.5)
-            #plt.bar([np.max(f[idx]),np.max(f[idx])], [0.8*np.max(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=1.5)
+            plt.bar([f[0],f[0]], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=5)
+            plt.bar([f[-1],f[-1]], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=5)
 
 
+            plt.bar(f[selected_indices], P1[selected_indices], color=np.array(color) / 255.0,width=5)
+
+            
     plt.title('Frequency Spectrum', fontsize=12)
     plt.xlabel('Frequency (Hz)', fontsize=12)
     plt.ylabel('Amplitude', fontsize=12)
-    plt.ylim([np.min(P1)-np.mean(P1),np.max(P1)])
+    #plt.ylim([-1e-3,np.max(P1)])
     #plt.xlim([np.min(ff),min(1000,np.max(ff))])
     plt.grid(True)
     plt.legend(notes, loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=12, fontsize='small')
@@ -488,7 +514,6 @@ def process_audio(audio_data):
     plot_url = base64.b64encode(img.getvalue()).decode('utf8')
     return plot_url
     #return f'<h2>Frequency Spectrum</h2><img src="data:image/png;base64,{plot_url}" alt="Frequency Spectrum">'
-
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
