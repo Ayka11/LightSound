@@ -364,25 +364,10 @@ def process_audio(audio_data):
         if idx[0].size > 0 :
             ff.extend(f[idx])
 
-            ''' 
-            fmean = np.mean(f[idx])
-            fmax = np.max(f[idx])
-            fmin = np.min(f[idx])
-            
-            #plt.bar([fmax,fmax], [np.min(P1[idx]),np.max(P1[idx])], width=width, color=np.array(color)/255.0, edgecolor='black', alpha=0.6)
-            #plt.bar([fmean,fmean], [np.min(P1[idx]),np.mean(P1[idx])], width=width, color=np.array(color)/255.0, edgecolor='black', alpha=0.6)
-            #plt.bar([fmin,fmin], [0,np.min([idx])], width=width, color=np.array(color)/255.0, edgecolor='black', alpha=0.6)
-
-            p=100
-            for i in range(p):
-                x=np.random.choice(np.arange(p))
-                fr=f[idx][x]
-                pr=P1[idx][x]
-                plt.bar([fr,fr], [0,pr], width=width, color=np.array(color)/255.0, edgecolor='black', alpha=0.6)
-            
-            #plt.bar(f[idx], P1[idx], width=width, color=np.array(color)/255.0, edgecolor='black', alpha=0.6)
-            '''
-            plt.plot(f[idx], P1[idx], color=np.array(color) / 255.0, linewidth=1.5)
+            num_samples = 20000  # Number of samples to plot
+            selected_indices = np.random.choice(idx[0], size=min(num_samples, idx[0].size), replace=False)
+                    
+            plt.scatter(f[selected_indices], P1[selected_indices], color=np.array(color) / 255.0)
 
     plt.title('Frequency Spectrum', fontsize=12)
     plt.xlabel('Frequency (Hz)', fontsize=12)
