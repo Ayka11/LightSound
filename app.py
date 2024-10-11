@@ -461,9 +461,9 @@ def process_audio(audio_data):
             num_samples = 200  # Number of samples to plot
             selected_indices = np.random.choice(idx[0], size=min(num_samples, idx[0].size), replace=False)
                     
-            plt.bar([np.mean(f[idx]),np.mean(f[idx])], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=1.5)
-            plt.bar([np.min(f[idx]),np.min(f[idx])], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=1.5)
-            plt.bar([np.max(f[idx]),np.max(f[idx])], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=1.5)
+            plt.bar([np.mean(f[idx]),np.mean(f[idx])], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=2)
+            plt.bar([np.min(f[idx]),np.min(f[idx])], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=2)
+            plt.bar([np.max(f[idx]),np.max(f[idx])], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=2)
 
             #plt.bar([np.mean(f[idx]),np.mean(f[idx])], [0.8*np.max(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=1.5)
             #plt.bar([np.min(f[idx]),np.min(f[idx])], [0.8*np.max(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=1.5)
