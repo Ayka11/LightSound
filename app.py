@@ -499,8 +499,8 @@ def process_audio(audio_data):
     plt.title('Frequency Spectrum', fontsize=12)
     plt.xlabel('Frequency (Hz)', fontsize=12)
     plt.ylabel('Amplitude', fontsize=12)
-    #plt.ylim([-1e-3,np.max(P1)])
-    #plt.xlim([np.min(ff),min(1000,np.max(ff))])
+    plt.ylim([-1e-3,np.max(P1)])
+    plt.xlim([np.min(ff),min(1000,np.max(ff))])
     plt.grid(True)
     plt.legend(notes, loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=12, fontsize='small')
 
