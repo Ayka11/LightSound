@@ -190,13 +190,12 @@ def upload_audio():
         temp_filename = 'uploaded_audio.wav' if file.filename.endswith('.wav') else 'uploaded_audio.mp3'
         file.save(temp_filename)
         
-        plot_url2,frequencies,amplitudes,colorss = process_audio(y)
+        frequencies,amplitudes= process_audio(y)
         
         # Store frequency data for Dash
         frequency_data = {
             'frequencies': frequencies,
-            'amplitudes': amplitudes,
-            'colors': colorss
+            'amplitudes': amplitudes
         }
         #session['frequency_data'] = frequency_data
 
@@ -259,186 +258,102 @@ def color_to_text():
     return render_template('color_to_text.html')
 
 colors = plt.cm.Set1(np.linspace(0, 1, len(freqs_org)))  # Choose your preferred colormap
-# Define frequency ranges and their corresponding colors
-frequency_colors = {
-    (100, 200): (255, 0, 0),          # Red
-    (100, 300): (139, 0, 0),          # Dark Red
-    (200, 300): (255, 127, 80),       # Coral
-    (200, 400): (255, 165, 0),        # Orange
-    (200, 600): (255, 215, 0),        # Gold
-    (200, 1000): (255, 255, 0),       # Yellow
-    (200, 1000): (255, 255, 224),     # Light Yellow
-    (200, 1000): (255, 250, 205),     # Lemon
-    (700, 1100): (0, 255, 0),         # Green
-    (300, 1500): (0, 100, 0),         # Dark Green
-    (1000, 2000): (50, 205, 50),      # Lime
-    (1000, 3000): (128, 128, 0),      # Olive
-    (400, 2000): (189, 252, 201),     # Mint
-    (250, 2000): (0, 255, 255),       # Light Blue
-    (250, 3000): (64, 224, 208),      # Turquoise
-    (500, 2500): (46, 139, 87),       # Sea Wave
-    (300, 3000): (135, 206, 235),     # Sky Blue
-    (300, 3000): (0, 0, 255),         # Blue
-    (300, 3000): (0, 0, 139),         # Dark Blue
-    (500, 1500): (65, 105, 225),      # Royal Blue
-    (500, 1500): (128, 0, 128),       # Violet
-    (500, 2500): (221, 160, 221),     # Plum
-    (500, 2500): (230, 230, 250),     # Lavender
-    (1500, 4000): (255, 0, 255),      # Magenta
-    (1700, 2000): (139, 0, 139),      # Dark Magenta
-    (200, 5000): (255, 192, 203),     # Pink
-    (2000, 5000): (255, 182, 193),    # Light Pink
-    (2000, 8000): (250, 128, 114),    # Salmon
-    (3000, 7000): (210, 105, 30),     # Chocolate
-    (6000, 8000): (165, 42, 42),      # Brown
-    (6000, 8000): (255, 140, 0)        # Dark Orange
+
+
+frequency_colors_update = {
+    "A0": {"frequency": 27.50, "color": (139, 0, 0), "range": (27.50, 29.14)},
+    "A#0/Bb0": {"frequency": 29.14, "color": (255, 69, 0), "range": (29.14, 30.87)},
+    "B0": {"frequency": 30.87, "color": (204, 204, 0), "range": (30.87, 32.70)},
+    "C1": {"frequency": 32.70, "color": (102, 152, 0), "range": (32.70, 34.65)},
+    "C#1/Db1": {"frequency": 34.65, "color": (0, 100, 0), "range": (34.65, 36.71)},
+    "D1": {"frequency": 36.71, "color": (0, 50, 69), "range": (36.71, 38.89)},
+    "D#1/Eb1": {"frequency": 38.89, "color": (0, 0, 139), "range": (38.89, 41.20)},
+    "E1": {"frequency": 41.20, "color": (75, 0, 130), "range": (41.20, 43.65)},
+    "F1": {"frequency": 43.65, "color": (112, 0, 171), "range": (43.65, 46.25)},
+    "F#1/Gb1": {"frequency": 46.25, "color": (148, 0, 211), "range": (46.25, 49.00)},
+    "G1": {"frequency": 49.00, "color": (157, 0, 106), "range": (49.00, 51.91)},
+    "G#1/Ab1": {"frequency": 51.91, "color": (165, 0, 0), "range": (51.91, 55.00)},
+    "A1": {"frequency": 55.00, "color": (210, 0, 128), "range": (55.00, 58.27)},
+    "A#1/Bb1": {"frequency": 58.27, "color": (255, 94, 0), "range": (58.27, 61.74)},
+    "B1": {"frequency": 61.74, "color": (221, 221, 0), "range": (61.74, 65.41)},
+    "C2": {"frequency": 65.41, "color": (111, 175, 0), "range": (65.41, 69.30)},
+    "C#2/Db2": {"frequency": 69.30, "color": (0, 128, 0), "range": (69.30, 73.42)},
+    "D2": {"frequency": 73.42, "color": (0, 64, 85), "range": (73.42, 77.78)},
+    "D#2/Eb2": {"frequency": 77.78, "color": (0, 0, 170), "range": (77.78, 82.41)},
+    "E2": {"frequency": 82.41, "color": (92, 0, 159), "range": (82.41, 87.31)},
+    "F2": {"frequency": 87.31, "color": (119, 0, 96), "range": (87.31, 92.50)},
+    "F#2/Gb2": {"frequency": 92.50, "color": (159, 0, 226), "range": (92.50, 98.00)},
+    "G2": {"frequency": 98.00, "color": (175, 0, 113), "range": (98.00, 103.83)},
+    "G#2/Ab2": {"frequency": 103.83, "color": (191, 0, 0), "range": (103.83, 110.00)},
+    "A2": {"frequency": 110.00, "color": (223, 59, 128), "range": (110.00, 116.54)},
+    "A#2/Bb2": {"frequency": 116.54, "color": (255, 119, 0), "range": (116.54, 123.47)},
+    "B2": {"frequency": 123.47, "color": (238, 238, 0), "range": (123.47, 130.81)},
+    "C3": {"frequency": 130.81, "color": (119, 159, 0), "range": (130.81, 138.59)},
+    "C#3/Db3": {"frequency": 138.59, "color": (0, 160, 0), "range": (138.59, 146.83)},
+    "D3": {"frequency": 146.83, "color": (0, 80, 100), "range": (146.83, 155.56)},
+    "D#3/Eb3": {"frequency": 155.56, "color": (0, 0, 200), "range": (155.56, 164.81)},
+    "E3": {"frequency": 164.81, "color": (109, 0, 188), "range": (164.81, 174.61)},
+    "F3": {"frequency": 174.61, "color": (140, 0, 215), "range": (174.61, 185.00)},
+    "F#3/Gb3": {"frequency": 185.00, "color": (170, 0, 241), "range": (185.00, 196.00)},
+    "G3": {"frequency": 196.00, "color": (194, 0, 121), "range": (196.00, 207.65)},
+    "G#3/Ab3": {"frequency": 207.65, "color": (217, 0, 0), "range": (207.65, 220.00)},
+    "A3": {"frequency": 220.00, "color": (236, 72, 0), "range": (220.00, 233.08)},
+    "A#3/Bb3": {"frequency": 233.08, "color": (255, 144, 0), "range": (233.08, 246.94)},
+    "B3": {"frequency": 246.94, "color": (255, 255, 0), "range": (246.94, 261.63)},
+    "C4": {"frequency": 261.63, "color": (128, 224, 0), "range": (261.63, 277.18)},
+    "C#4/Db4": {"frequency": 277.18, "color": (0, 192, 0), "range": (277.18, 293.66)},
+    "D4": {"frequency": 293.66, "color": (0, 96, 115), "range": (293.66, 311.13)},
+    "D#4/Eb4": {"frequency": 311.13, "color": (0, 0, 230), "range": (311.13, 329.63)},
+    "E4": {"frequency": 329.63, "color": (126, 0, 217), "range": (329.63, 349.23)},
+    "F4": {"frequency": 349.23, "color": (159, 26, 236), "range": (349.23, 369.99)},
+    "F#4/Gb4": {"frequency": 369.99, "color": (191, 51, 255), "range": (369.99, 392.00)},
+    "G4": {"frequency": 392.00, "color": (217, 26, 128), "range": (392.00, 415.30)},
+    "G#4/Ab4": {"frequency": 415.30, "color": (243, 0, 0), "range": (415.30, 440.00)},
+    "A4": {"frequency": 440.00, "color": (249, 85, 0), "range": (440.00, 466.16)},
+    "A#4/Bb4": {"frequency": 466.16, "color": (255, 169, 0), "range": (466.16, 493.88)},
+    "B4": {"frequency": 493.88, "color": (255, 255, 51), "range": (493.88, 523.25)},
+    "C5": {"frequency": 523.25, "color": (153, 255, 51), "range": (523.25, 554.37)},
+    "C#5/Db5": {"frequency": 554.37, "color": (51, 255, 51), "range": (554.37, 587.33)},
+    "D5": {"frequency": 587.33, "color": (51, 204, 204), "range": (587.33, 622.25)},
+    "D#5/Eb5": {"frequency": 622.25, "color": (51, 51, 255), "range": (622.25, 659.25)},
+    "E5": {"frequency": 659.25, "color": (128, 51, 255), "range": (659.25, 698.46)},
+    "F5": {"frequency": 698.46, "color": (159, 87, 255), "range": (698.46, 739.99)},
+    "F#5/Gb5": {"frequency": 739.99, "color": (190, 123, 255), "range": (739.99, 783.99)},
+    "G5": {"frequency": 783.99, "color": (204, 87, 128), "range": (783.99, 830.61)},
+    "G#5/Ab5": {"frequency": 830.61, "color": (255, 51, 51), "range": (830.61, 880.00)},
+    "A5": {"frequency": 880.00, "color": (255, 128, 102), "range": (880.00, 932.33)},
+    "A#5/Bb5": {"frequency": 932.33, "color": (255, 204, 102), "range": (932.33, 987.77)},
+    "B5": {"frequency": 987.77, "color": (255, 255, 102), "range": (987.77, 1046.50)},
+    "C6": {"frequency": 1046.50, "color": (179, 255, 102), "range": (1046.50, 1108.73)},
+    "C#6/Db6": {"frequency": 1108.73, "color": (102, 255, 102), "range": (1108.73, 1174.66)},
+    "D6": {"frequency": 1174.66, "color": (102, 204, 204), "range": (1174.66, 1244.51)},
+    "D#6/Eb6": {"frequency": 1244.51, "color": (102, 102, 255), "range": (1244.51, 1318.51)},
+    "E6": {"frequency": 1318.51, "color": (153, 102, 255), "range": (1318.51, 1396.91)},
+    "F6": {"frequency": 1396.91, "color": (177, 128, 255), "range": (1396.91, 1479.98)},
+    "F#6/Gb6": {"frequency": 1479.98, "color": (201, 153, 255), "range": (1479.98, 1567.98)},
+    "G6": {"frequency": 1567.98, "color": (209, 128, 153), "range": (1567.98, 1661.22)},
+    "G#6/Ab6": {"frequency": 1661.22, "color": (255, 102, 102), "range": (1661.22, 1760.00)},
+    "A6": {"frequency": 1760.00, "color": (255, 153, 128), "range": (1760.00, 1864.66)},
+    "A#6/Bb6": {"frequency": 1864.66, "color": (255, 204, 153), "range": (1864.66, 1975.53)},
+    "B6": {"frequency": 1975.53, "color": (255, 255, 153), "range": (1975.53, 2093.00)},
+    "C7": {"frequency": 2093.00, "color": (204, 255, 153), "range": (2093.00, 2217.46)},
+    "C#7/Db7": {"frequency": 2217.46, "color": (153, 255, 153), "range": (2217.46, 2349.32)},
+    "D7": {"frequency": 2349.32, "color": (153, 204, 204), "range": (2349.32, 2489.02)},
+    "D#7/Eb7": {"frequency": 2489.02, "color": (153, 153, 255), "range": (2489.02, 2637.02)},
+    "E7": {"frequency": 2637.02, "color": (197, 153, 255), "range": (2637.02, 2793.83)},
+    "F7": {"frequency": 2793.83, "color": (222, 176, 255), "range": (2793.83, 2959.96)},
+    "F#7/Gb7": {"frequency": 2959.96, "color": (246, 198, 255), "range": (2959.96, 3135.96)},
+    "G7": {"frequency": 3135.96, "color": (251, 176, 204), "range": (3135.96, 3322.44)},
+    "G#7/Ab7": {"frequency": 3322.44, "color": (255, 153, 153), "range": (3322.44, 3520.00)},
+    "A7": {"frequency": 3520.00, "color": (255, 194, 176), "range": (3520.00, 3729.31)},
+    "A#7/Bb7": {"frequency": 3729.31, "color": (255, 234, 198), "range": (3729.31, 3951.07)},
+    "B7": {"frequency": 3951.07, "color": (255, 255, 204), "range": (3951.07, 4186.01)},
+    "C8": {"frequency": 4186.01, "color": (144, 238, 144), "range": (4186.01, 4434.92)}
 }
-
-frequency_colors = {
-    (100, 200): (255, 0, 0),           # Red
-    (100, 300): (139, 0, 0),           # Dark Red
-    (200, 300): (255, 127, 80),        # Coral
-    (200, 400): (255, 165, 0),         # Orange
-    (200, 600): (255, 215, 0),         # Gold
-    (200, 1000): (255, 255, 0),        # Yellow
-    (200, 5000): (255, 192, 203),      # Pink
-    (2000, 5000): (255, 182, 193),     # Light Pink
-    (2000, 8000): (250, 128, 114),     # Salmon
-    (300, 1500): (0, 100, 0),          # Dark Green
-    (3000, 7000): (210, 105, 30),      # Chocolate
-    (6000, 8000): (255, 140, 0)        # Dark Orange
-    # Add remaining unique ranges and colors...
-}
-
-frequency_colors = {
-    (100, 200): (255, 0, 0),           # /m/ as in "mat" (Red)
-    (100, 200): (139, 0, 0),           # /p/ as in "pat" (Dark Red)
-    (100, 300): (255, 127, 80),        # /b/ as in "bat" (Coral)
-    (200, 400): (255, 165, 0),         # /d/ as in "dog" (Orange)
-    (200, 600): (255, 215, 0),         # /g/ as in "go" (Gold)
-    (200, 600): (255, 255, 0),         # /n/ as in "no" (Yellow)
-    (200, 1000): (255, 255, 224),      # /w/ as in "wet" (Light Yellow)
-    (200, 1000): (255, 250, 205),      # /r/ as in "rat" (Lemon)
-    (200, 1000): (0, 255, 0),          # ‘ŋ’ (as in "sing") (Green)
-    (700, 1100): (0, 100, 0),          # /ɑ/ as in "father" (Dark Green)
-    (300, 1500): (50, 205, 50),        # /o/ as in "pot" (Lime)
-    (1000, 2000): (128, 128, 0),       # /h/ as in "hat" (Olive)
-    (1000, 3000): (189, 252, 201),     # ‘ð’ (as in "this") (Mint)
-    (400, 2000): (0, 255, 255),        # /e/ as in "bed" (Light Blue)
-    (250, 2000): (64, 224, 208),       # /u/ as in "put" (Turquoise)
-    (250, 3000): (46, 139, 87),        # /i/ as in "sit" (Sea Wave)
-    (500, 2500): (135, 206, 235),      # /a/ as in "cat" (Sky Blue)
-    (300, 3000): (0, 0, 255),          # /l/ as in "lamp" (Blue)
-    (300, 3000): (0, 0, 139),          # /t/ as in "top" (Dark Blue)
-    (500, 1500): (65, 105, 225),       # ‘ʌ’ (as in "cup") (Royal Blue)
-    (500, 1500): (128, 0, 128),        # ‘ə’ (as in "sofa") (Violet)
-    (500, 2500): (221, 160, 221),      # /j/ as in "jump" (Plum)
-    (500, 2500): (230, 230, 250),      # ‘æ’ (as in "cat") (Lavender)
-    (1500, 4000): (255, 0, 255),       # /k/ as in "kite" (Magenta)
-    (1700, 2000): (139, 0, 139),       # /f/ as in "fish" (Dark Magenta)
-    (200, 5000): (255, 192, 203),      # /v/ as in "vet" (Pink)
-    (2000, 5000): (255, 182, 193),     # /s/ as in "sat" (Light Pink)
-    (2000, 5000): (250, 128, 114),     # ‘ʒ’ (as in "measure") (Salmon)
-    (2000, 8000): (210, 105, 30),      # /ʃ/ as in "she" (Chocolate)
-    (3000, 7000): (165, 42, 42),       # /z/ as in "zoo" (Brown)
-    (6000, 8000): (255, 140, 0)        # ‘θ’ (as in "thin") (Dark Orange)
-}
-
-frequency_colors = {
-    (27.50, 29.14): (139, 0, 0),        # A0 (Dark Red)
-    (29.14, 30.87): (197, 34, 0),       # A#0/Bb0 (Dark Red)
-    (30.87, 32.70): (255, 69, 0),       # B0 (Coral)
-    (32.70, 34.65): (204, 204, 0),      # C1 (Yellow)
-    (34.65, 36.71): (102, 152, 0),      # C#1/Db1 (Green)
-    (36.71, 38.89): (0, 100, 0),        # D1 (Dark Green)
-    (38.89, 41.20): (0, 50, 69),        # D#1/Eb1 (Blue)
-    (41.20, 43.65): (41, 20, 0),        # E1 (Brown)
-    (43.65, 46.25): (0, 0, 139),        # F1 (Dark Blue)
-    (46.25, 49.00): (75, 0, 130),       # F#1/Gb1 (Purple)
-    (49.00, 51.91): (112, 0, 171),      # G1 (Dark Purple)
-    (51.91, 55.00): (148, 0, 211),      # G#1/Ab1 (Light Purple)
-    (55.00, 58.27): (139, 0, 0),        # A1 (Dark Red)
-    (58.27, 61.74): (197, 34, 0),       # A#1/Bb1 (Dark Red)
-    (61.74, 65.41): (255, 69, 0),       # B1 (Coral)
-    (65.41, 69.30): (204, 204, 0),      # C2 (Yellow)
-    (69.30, 73.42): (102, 152, 0),      # C#2/Db2 (Green)
-    (73.42, 77.78): (0, 100, 0),        # D2 (Dark Green)
-    (77.78, 82.41): (0, 50, 69),        # D#2/Eb2 (Blue)
-    (82.41, 87.31): (41, 20, 0),        # E2 (Brown)
-    (87.31, 92.50): (0, 0, 139),        # F2 (Dark Blue)
-    (92.50, 98.00): (75, 0, 130),       # F#2/Gb2 (Purple)
-    (98.00, 103.83): (112, 0, 171),     # G2 (Dark Purple)
-    (103.83, 110.00): (148, 0, 211),    # G#2/Ab2 (Light Purple)
-    (110.00, 116.54): (139, 0, 0),      # A2 (Dark Red)
-    (116.54, 123.47): (197, 34, 0),     # A#2/Bb2 (Dark Red)
-    (123.47, 130.81): (255, 69, 0),     # B2 (Coral)
-    (130.81, 138.59): (204, 204, 0),    # C3 (Yellow)
-    (138.59, 146.83): (102, 152, 0),    # C#3/Db3 (Green)
-    (146.83, 155.56): (0, 100, 0),      # D3 (Dark Green)
-    (155.56, 164.81): (0, 50, 69),      # D#3/Eb3 (Blue)
-    (164.81, 174.61): (41, 20, 0),      # E3 (Brown)
-    (174.61, 185.00): (0, 0, 139),      # F3 (Dark Blue)
-    (185.00, 196.00): (75, 0, 130),     # F#3/Gb3 (Purple)
-    (196.00, 207.65): (112, 0, 171),    # G3 (Dark Purple)
-    (207.65, 220.00): (148, 0, 211),    # G#3/Ab3 (Light Purple)
-    (220.00, 233.08): (139, 0, 0),      # A3 (Dark Red)
-    (233.08, 246.94): (197, 34, 0),     # A#3/Bb3 (Dark Red)
-    (246.94, 261.63): (255, 69, 0),     # B3 (Coral)
-    (261.63, 277.18): (204, 204, 0),    # C4 (Yellow)
-    (277.18, 293.66): (102, 152, 0),    # C#4/Db4 (Green)
-    (293.66, 311.13): (0, 100, 0),      # D4 (Dark Green)
-    (311.13, 329.63): (0, 50, 69),      # D#4/Eb4 (Blue)
-    (329.63, 349.23): (41, 20, 0),      # E4 (Brown)
-    (349.23, 369.99): (0, 0, 139),      # F4 (Dark Blue)
-    (369.99, 392.00): (75, 0, 130),     # F#4/Gb4 (Purple)
-    (392.00, 415.30): (112, 0, 171),    # G4 (Dark Purple)
-    (415.30, 440.00): (148, 0, 211),    # G#4/Ab4 (Light Purple)
-    (440.00, 466.16): (139, 0, 0),      # A4 (Dark Red)
-    (466.16, 493.88): (197, 34, 0),     # A#4/Bb4 (Dark Red)
-    (493.88, 523.25): (255, 69, 0),     # B4 (Coral)
-    (523.25, 554.37): (204, 204, 0),    # C5 (Yellow)
-    (554.37, 587.33): (102, 152, 0),    # C#5/Db5 (Green)
-    (587.33, 622.25): (0, 100, 0),      # D5 (Dark Green)
-    (622.25, 659.25): (0, 50, 69),      # D#5/Eb5 (Blue)
-    (659.25, 698.46): (41, 20, 0),      # E5 (Brown)
-    (698.46, 739.99): (0, 0, 139),      # F5 (Dark Blue)
-    (739.99, 783.99): (75, 0, 130),     # F#5/Gb5 (Purple)
-    (783.99, 830.61): (112, 0, 171),    # G5 (Dark Purple)
-    (830.61, 880.00): (148, 0, 211),    # G#5/Ab5 (Light Purple)
-    (880.00, 932.33): (139, 0, 0),      # A5 (Dark Red)
-    (932.33, 987.77): (197, 34, 0),     # A#5/Bb5 (Dark Red)
-    (987.77, 1046.50): (255, 69, 0),    # B5 (Coral)
-    (1046.50, 1108.73): (204, 204, 0),  # C6 (Yellow)
-    (1108.73, 1174.66): (102, 152, 0),  # C#6/Db6 (Green)
-    (1174.66, 1244.51): (0, 100, 0),    # D6 (Dark Green)
-    (1244.51, 1318.51): (0, 50, 69),    # D#6/Eb6 (Blue)
-    (1318.51, 1396.91): (41, 20, 0),    # E6 (Brown)
-    (1396.91, 1479.98): (0, 0, 139),
-    (1479.98, 1567.98): (75, 0, 130),   # F#6/Gb6 (Purple)
-    (1567.98, 1661.22): (112, 0, 171),  # G6 (Dark Purple)
-    (1661.22, 1760.00): (148, 0, 211),  # G#6/Ab6 (Light Purple)
-    (1760.00, 1864.66): (139, 0, 0),    # A6 (Dark Red)
-    (1864.66, 1975.53): (197, 34, 0),   # A#6/Bb6 (Dark Red)
-    (1975.53, 2093.00): (255, 69, 0),   # B6 (Coral)
-    (2093.00, 2217.46): (204, 204, 0),  # C7 (Yellow)
-    (2217.46, 2349.32): (102, 152, 0),  # C#7/Db7 (Green)
-    (2349.32, 2489.02): (0, 100, 0),    # D7 (Dark Green)
-    (2489.02, 2637.02): (0, 50, 69),    # D#7/Eb7 (Blue)
-    (2637.02, 2793.83): (41, 20, 0),    # E7 (Brown)
-    (2793.83, 2959.96): (0, 0, 139),    # F7 (Dark Blue)
-    (2959.96, 3135.96): (75, 0, 130),   # F#7/Gb7 (Purple)
-    (3135.96, 3322.44): (112, 0, 171),  # G7 (Dark Purple)
-    (3322.44, 3520.00): (148, 0, 211),  # G#7/Ab7 (Light Purple)
-    (3520.00, 3729.31): (139, 0, 0),    # A7 (Dark Red)
-    (3729.31, 3951.07): (197, 34, 0),   # A#7/Bb7 (Dark Red)
-    (3951.07, 4186.01): (255, 69, 0)     # B7 (Coral)
-}
-
-
 
 # Extract frequencies and their colors
-freqs = list(frequency_colors.keys())
-colors = list(frequency_colors.values())
+#freqs = list(frequency_colors.keys())
+#scolors = list(frequency_colors.values())
 
 
 
@@ -484,78 +399,9 @@ def process_audio(audio_data):
     P2 = np.abs(Y / L)
     P1 = P2[:L // 2 + 1]
     P1[1:-1] = 2 * P1[1:-1]
-    f = Fs * np.arange((L // 2) + 1) / L
-    
-
-    # Plot the frequency spectrum
-    ff=[]
-    rr=[]
-    colorss=[]
-    width=2
-    plt.figure(figsize=(12, 6))
-    for i, (freq_range, color) in enumerate(zip(freqs, colors)):
-        idx = np.where((f >= freq_range[0]) & (f < freq_range[1]))
-        
-        
-        if idx[0].size > 0 :
+    f = Fs * np.arange((L // 2) + 1) / L   
             
-            
-
-            num_samples = 20  # Number of samples to plot
-            selected_indices = np.random.choice(idx[0], size=min(num_samples, idx[0].size), replace=False)
-
-            #ff.extend(f[selected_indices])
-            #rr.extend(P1[selected_indices])
-            #colorss.extend([color]*len(f[selected_indices]))
-
-            ff.extend(f[idx])
-            rr.extend(P1[idx])
-              
-            '''
-            ff.append(np.min(f[idx]))
-            rr.append(np.mean(P1[idx]))
-
-            ff.append(np.max(f[idx]))
-            rr.append(np.mean(P1[idx]))
-
-            ff.append(f[0])
-            rr.append(np.max(P1[idx]))
-
-            ff.append(f[-1])
-            rr.append(np.max(P1[idx]))
-            '''
-            
-
-            colorss.extend([color]*len(f[idx]))
-            
-            plt.bar([np.mean(f[idx]),np.mean(f[idx])], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=5)
-            plt.bar([np.min(f[idx]),np.min(f[idx])], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=5)
-            plt.bar([np.max(f[idx]),np.max(f[idx])], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=5)
-
-            plt.bar([f[0],f[0]], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=5)
-            plt.bar([f[-1],f[-1]], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=5)
-
-
-            plt.bar(f[selected_indices], P1[selected_indices], color=np.array(color) / 255.0,width=5)
-
-            
-    plt.title('Frequency Spectrum', fontsize=12)
-    plt.xlabel('Frequency (Hz)', fontsize=12)
-    plt.ylabel('Amplitude', fontsize=12)
-    plt.ylim([-1e-3,np.max(P1)])
-    plt.xlim([np.min(ff),min(1000,np.max(ff))])
-    plt.grid(True)
-    plt.legend(notes, loc='upper center', bbox_to_anchor=(0.5, 1.15), ncol=12, fontsize='small')
-
-    # Save the plot to a BytesIO object
-    img = io.BytesIO()
-    plt.savefig(img, format='png')
-    plt.close()
-    img.seek(0)
-
-    # Encode the image to base64
-    plot_url = base64.b64encode(img.getvalue()).decode('utf8')
-    return plot_url,ff,rr,colorss
+    return f,P1
     #return f'<h2>Frequency Spectrum</h2><img src="data:image/png;base64,{plot_url}" alt="Frequency Spectrum">'
 
 @app.route('/upload', methods=['POST'])
@@ -571,32 +417,11 @@ def update_bar_chart(frequency_data):
     if frequency_data is None:
         return go.Figure()  # Return empty figure if no data
 
-    #frequency_data = session['frequency_data']
-    #frequency_data = session.get('frequency_data', None)
-
     freqq=pd.read_csv('freq.csv')
                 
     frequency_data=freqq
     frequencies = list(frequency_data['frequencies'])
     amplitudes = list(frequency_data['amplitudes'])
-    colors = frequency_data['colors']
-    #amplitudes = [a * 1e6 for a in amplitudes]  # Scale up by a million for better visibility
-
-
-    # Convert color strings to RGBA format
-    rgba_colors = [
-        f'rgba({int(color[1:-1].split(",")[0])}, {int(color[1:-1].split(",")[1])}, {int(color[1:-1].split(",")[2])}, 0.6)'
-        for color in colors
-    ]
-
-   
-    
-    #fig = go.Figure(data=[
-    #    go.Bar(
-    #        x=frequencies,
-    #        y=amplitudes,
-    #        marker_color=rgba_colors  )
-    #])
 
     fig = go.Figure(data=[
         go.Bar(
@@ -607,52 +432,16 @@ def update_bar_chart(frequency_data):
     ])
     df = pd.DataFrame({'Frequency': frequencies, 'Amplitude': amplitudes})
 
-    # Create bar chart
-    fig = px.box(df, x='Frequency', y='Amplitude', points="all")
-
-    # Update the box colors
-    for i, box in enumerate(fig.data):
-        #if i < len(rgba_colors):
-        print(rgba_colors[i])
-        box.marker.color = rgba_colors[i]  # Assign custom color to each box
-      
     # Create a list to hold the box traces
-    box_traces = []
-    
-    unique_frequencies = df['Frequency'].unique()
+    box_traces = []   
 
-    min_frequencies = df['Frequency'].min()
-    max_frequencies = df['Frequency'].max()
 
-    step=60
-
-    '''
-    # Create a box trace for each unique frequency
-    for i, freq in enumerate(unique_frequencies):
-        freq_data = df[df['Frequency'] == freq]
-        note_name = notes[min(int(freq // 2), len(notes) - 1)]  # Map frequency to the corresponding note
+    for note in frequency_colors_update:
         
-        box_traces.append(go.Box(
-            y=freq_data['Amplitude'],
-            name=note_name,  # Name the box with the frequency
-            marker_color=rgba_colors[i % len(rgba_colors)]  # Cycle through colors
-        ))
-    '''    
-
-
-    for i, note in enumerate(notes[:-1]):
         # Define the frequency range for the note
-        lower_bound = freqs_org[i]   # 5% lower
-        upper_bound = freqs_org[i+1]   # 5% upper
-
-        #if i>=len(list(frequency_colors.keys())):
-        #    continue
-
-        #lower_bound=list(frequency_colors.keys())[i][0]
-        #upper_bound=list(frequency_colors.keys())[i][1]
-        
-
-        
+        print('here',frequency_colors_update[note])
+        lower_bound = frequency_colors_update[note]["range"][0]
+        upper_bound = frequency_colors_update[note]["range"][1]
         
         # Filter amplitudes for frequencies within the defined range
         freq_data = df[(df['Frequency'] > lower_bound) & 
@@ -664,7 +453,7 @@ def update_bar_chart(frequency_data):
             box_traces.append(go.Box(
                 y=freq_data['Amplitude'],  # Amplitudes on Y-axis
                 name=note,  # Name the box with the note name
-                marker_color=rgba_colors[xx[0]]  # Cycle through colors
+                marker_color='rgba(' + str(frequency_colors_update[note]["color"])[1:-1] + ',0.6)'   # Cycle through colors
             ))
         
     frange = np.arange(0,int(max(frequencies)),500)
@@ -674,8 +463,6 @@ def update_bar_chart(frequency_data):
                       xaxis_title='Frequency',
                       yaxis_title='Amplitude')   # Set y-axis limits)
 
-
-    #fig.update_layout(title='Frequency vs Amplitude', xaxis_title='Frequency (Hz)', yaxis_title='Amplitude')
     return fig
 
 
