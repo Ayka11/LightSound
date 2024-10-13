@@ -1,7 +1,7 @@
 import matplotlib
 matplotlib.use('Agg') 
 import colorsys
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request,session
 import numpy as np
 import librosa
 import librosa.display
@@ -21,11 +21,25 @@ import matplotlib.pyplot as plt
 from scipy.fft import fft
 import io
 import base64
+import pandas as pd
 from pydub import AudioSegment
 
+from dash import Dash, dcc, html
+import dash_core_components as dcc
+import dash_html_components as html
+from dash import Dash, dcc, html, callback, Input, Output
+import plotly.graph_objs as go
+import plotly.express as px
+global session
 app = Flask(__name__)
+app.secret_key = 'lantop'  # Set a secret key for session
 
-# Define the audio recording settings
+
+
+# Initialize Dash app
+dash_app = Dash(__name__, server=app, url_base_pathname='/dash/')
+
+
 Fs = 44100  # Sampling frequency
 
 # Frequency ranges and names of piano notes
@@ -37,7 +51,7 @@ notes = ['A0', 'A#0/Bb0', 'B0', 'C1', 'C#1/Db1', 'D1', 'D#1/Eb1', 'E1', 'F1', 'F
          'A#5/Bb5', 'B5', 'C6', 'C#6/Db6', 'D6', 'D#6/Eb6', 'E6', 'F6', 'F#6/Gb6', 'G6', 'G#6/Ab6', 'A6', 
          'A#6/Bb6', 'B6', 'C7', 'C#7/Db7', 'D7', 'D#7/Eb7', 'E7', 'F7', 'F#7/Gb7', 'G7', 'G#7/Ab7', 'A7', 
          'A#7/Bb7', 'B7', 'C8']
-freqs = [27.50, 29.14, 30.87, 32.70, 34.65, 36.71, 38.89, 41.20, 43.65, 46.25, 49.00, 51.91, 55.00, 58.27, 
+freqs_org = [27.50, 29.14, 30.87, 32.70, 34.65, 36.71, 38.89, 41.20, 43.65, 46.25, 49.00, 51.91, 55.00, 58.27, 
          61.74, 65.41, 69.30, 73.42, 77.78, 82.41, 87.31, 92.50, 98.00, 103.83, 110.00, 116.54, 123.47, 
          130.81, 138.59, 146.83, 155.56, 164.81, 174.61, 185.00, 196.00, 207.65, 220.00, 233.08, 246.94, 
          261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392.00, 415.30, 440.00, 466.16, 493.88, 
@@ -47,7 +61,7 @@ freqs = [27.50, 29.14, 30.87, 32.70, 34.65, 36.71, 38.89, 41.20, 43.65, 46.25, 4
          3322.44, 3520.00, 3729.31, 3951.07, 4186.01]
 
 # Set colors for each frequency
-colors = [[139/255, 0, 0]] * len(freqs)
+colors = [[139/255, 0, 0]] * len(freqs_org)
 
 def read_docx(file):
     doc = Document(file)
@@ -108,7 +122,6 @@ def string_to_color_pattern(input_string, palette, cell_width=200, cell_height=2
     draw = ImageDraw.Draw(image)
     font = ImageFont.load_default(size=50)
 
-
     color_code = []
     for i, char in enumerate(input_string):
         color = char_to_color(char, palette)
@@ -132,6 +145,8 @@ def index():
 
 @app.route('/upload', methods=['POST'])
 def upload_audio():
+    global session
+    
     if 'file' not in request.files:
         return render_template('index.html', error="No file part")
     file = request.files['file']
@@ -175,20 +190,21 @@ def upload_audio():
         temp_filename = 'uploaded_audio.wav' if file.filename.endswith('.wav') else 'uploaded_audio.mp3'
         file.save(temp_filename)
         
-        #if temp_filename.endswith('.mp3'):
-        #    audio_segment = AudioSegment.from_mp3(file)
-        #    audio_segment.export(temp_filename, format='wav')
+        plot_url2,frequencies,amplitudes,colorss = process_audio(y)
+        
+        # Store frequency data for Dash
+        frequency_data = {
+            'frequencies': frequencies,
+            'amplitudes': amplitudes,
+            'colors': colorss
+        }
+        #session['frequency_data'] = frequency_data
 
-        # Read audio data using soundfile
-        #audio_data, sample_rate = sf.read(temp_filename)
+        df=pd.DataFrame(frequency_data)
+        df.to_csv('freq.csv',index=0)
+        
 
-        #audio_data = np.array(audio_segment.get_array_of_samples())
-        #audio_data = audio_data.reshape(-1, 1)
-                
-        #y,sr = sf.read(file)
-        plot_url2 = process_audio(y)
-
-        return render_template('color_representation.html', plot_url=plot_url,plot_url2=plot_url2)
+        return render_template('color_representation.html', plot_url=plot_url)
 
 @app.route('/text-to-color', methods=['GET', 'POST'])
 def text_to_color():
@@ -242,7 +258,7 @@ def color_to_text():
             return render_template('color_to_text.html', error="No input provided")
     return render_template('color_to_text.html')
 
-colors = plt.cm.Set1(np.linspace(0, 1, len(freqs)))  # Choose your preferred colormap
+colors = plt.cm.Set1(np.linspace(0, 1, len(freqs_org)))  # Choose your preferred colormap
 # Define frequency ranges and their corresponding colors
 frequency_colors = {
     (100, 200): (255, 0, 0),          # Red
@@ -474,17 +490,44 @@ def process_audio(audio_data):
     # Plot the frequency spectrum
     ff=[]
     rr=[]
+    colorss=[]
     width=2
     plt.figure(figsize=(12, 6))
     for i, (freq_range, color) in enumerate(zip(freqs, colors)):
         idx = np.where((f >= freq_range[0]) & (f < freq_range[1]))
+        
+        
         if idx[0].size > 0 :
+            
+            
+
+            num_samples = 20  # Number of samples to plot
+            selected_indices = np.random.choice(idx[0], size=min(num_samples, idx[0].size), replace=False)
+
+            #ff.extend(f[selected_indices])
+            #rr.extend(P1[selected_indices])
+            #colorss.extend([color]*len(f[selected_indices]))
+
             ff.extend(f[idx])
             rr.extend(P1[idx])
+              
+            '''
+            ff.append(np.min(f[idx]))
+            rr.append(np.mean(P1[idx]))
 
-            num_samples = 5  # Number of samples to plot
-            selected_indices = np.random.choice(idx[0], size=min(num_samples, idx[0].size), replace=False)
-                    
+            ff.append(np.max(f[idx]))
+            rr.append(np.mean(P1[idx]))
+
+            ff.append(f[0])
+            rr.append(np.max(P1[idx]))
+
+            ff.append(f[-1])
+            rr.append(np.max(P1[idx]))
+            '''
+            
+
+            colorss.extend([color]*len(f[idx]))
+            
             plt.bar([np.mean(f[idx]),np.mean(f[idx])], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=5)
             plt.bar([np.min(f[idx]),np.min(f[idx])], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=5)
             plt.bar([np.max(f[idx]),np.max(f[idx])], [np.mean(P1[idx]),np.max(P1[idx])], color=np.array(color) / 255.0,width=5)
@@ -512,13 +555,146 @@ def process_audio(audio_data):
 
     # Encode the image to base64
     plot_url = base64.b64encode(img.getvalue()).decode('utf8')
-    return plot_url
+    return plot_url,ff,rr,colorss
     #return f'<h2>Frequency Spectrum</h2><img src="data:image/png;base64,{plot_url}" alt="Frequency Spectrum">'
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
     return record()  # Delegate to the record function
 
+@dash_app.callback(
+    Output('bar-chart', 'figure'),
+    [Input('frequency-data', 'data')]
+)
+
+def update_bar_chart(frequency_data):
+    if frequency_data is None:
+        return go.Figure()  # Return empty figure if no data
+
+    #frequency_data = session['frequency_data']
+    #frequency_data = session.get('frequency_data', None)
+
+    freqq=pd.read_csv('freq.csv')
+                
+    frequency_data=freqq
+    frequencies = list(frequency_data['frequencies'])
+    amplitudes = list(frequency_data['amplitudes'])
+    colors = frequency_data['colors']
+    #amplitudes = [a * 1e6 for a in amplitudes]  # Scale up by a million for better visibility
+
+
+    # Convert color strings to RGBA format
+    rgba_colors = [
+        f'rgba({int(color[1:-1].split(",")[0])}, {int(color[1:-1].split(",")[1])}, {int(color[1:-1].split(",")[2])}, 0.6)'
+        for color in colors
+    ]
+
+   
+    
+    #fig = go.Figure(data=[
+    #    go.Bar(
+    #        x=frequencies,
+    #        y=amplitudes,
+    #        marker_color=rgba_colors  )
+    #])
+
+    fig = go.Figure(data=[
+        go.Bar(
+            x=frequencies,
+            y=amplitudes,
+            marker_color='rgba(0, 100, 200, 0.6)'  # Example color
+        )
+    ])
+    df = pd.DataFrame({'Frequency': frequencies, 'Amplitude': amplitudes})
+
+    # Create bar chart
+    fig = px.box(df, x='Frequency', y='Amplitude', points="all")
+
+    # Update the box colors
+    for i, box in enumerate(fig.data):
+        #if i < len(rgba_colors):
+        print(rgba_colors[i])
+        box.marker.color = rgba_colors[i]  # Assign custom color to each box
+      
+    # Create a list to hold the box traces
+    box_traces = []
+    
+    unique_frequencies = df['Frequency'].unique()
+
+    min_frequencies = df['Frequency'].min()
+    max_frequencies = df['Frequency'].max()
+
+    step=60
+
+    '''
+    # Create a box trace for each unique frequency
+    for i, freq in enumerate(unique_frequencies):
+        freq_data = df[df['Frequency'] == freq]
+        note_name = notes[min(int(freq // 2), len(notes) - 1)]  # Map frequency to the corresponding note
+        
+        box_traces.append(go.Box(
+            y=freq_data['Amplitude'],
+            name=note_name,  # Name the box with the frequency
+            marker_color=rgba_colors[i % len(rgba_colors)]  # Cycle through colors
+        ))
+    '''    
+
+
+    for i, note in enumerate(notes[:-1]):
+        # Define the frequency range for the note
+        lower_bound = freqs_org[i]   # 5% lower
+        upper_bound = freqs_org[i+1]   # 5% upper
+
+        #if i>=len(list(frequency_colors.keys())):
+        #    continue
+
+        #lower_bound=list(frequency_colors.keys())[i][0]
+        #upper_bound=list(frequency_colors.keys())[i][1]
+        
+
+        
+        
+        # Filter amplitudes for frequencies within the defined range
+        freq_data = df[(df['Frequency'] > lower_bound) & 
+                                   (df['Frequency'] < upper_bound)]
+        xx=freq_data.index
+        
+        #print(rgba_colors[i])
+        if not freq_data.empty:
+            box_traces.append(go.Box(
+                y=freq_data['Amplitude'],  # Amplitudes on Y-axis
+                name=note,  # Name the box with the note name
+                marker_color=rgba_colors[xx[0]]  # Cycle through colors
+            ))
+        
+    frange = np.arange(0,int(max(frequencies)),500)
+    # Create the figure with all box traces
+    fig = go.Figure(data=box_traces)
+    fig.update_layout(title='Frequency vs Amplitude',
+                      xaxis_title='Frequency',
+                      yaxis_title='Amplitude')   # Set y-axis limits)
+
+
+    #fig.update_layout(title='Frequency vs Amplitude', xaxis_title='Frequency (Hz)', yaxis_title='Amplitude')
+    return fig
+
+
+# Layout for Dash app
+dash_app.layout = html.Div([
+    dcc.Store(id='frequency-data', data={}),  # To store frequency data
+    dcc.Graph(id='bar-chart',figure=update_bar_chart(None)),
+    html.Div(id='graph-container', style={'display': 'none'})  # Hidden div for handling updates
+])
+
+# Callback to load frequency data from session when a request is made
+@dash_app.callback(
+    Output('frequency-data', 'data'),
+    [Input('bar-chart', 'id')]  # Dummy input to trigger callback
+)
+def load_frequency_data(_):
+    frequency_data = session.get('frequency_data', {})
+    return frequency_data  # Return the data to the Store
+
 if __name__ == '__main__':
-    app.run(debug=True)
+     app.run(debug=True)
 
