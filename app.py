@@ -162,7 +162,8 @@ def upload_audio():
             print("Audio has more than one channel. Using the first channel.")
             y = y[:, 0]  # Select the first channel
     
-
+        if len(y)>Fs*1.0*60:
+            y=y[:int(Fs*1.0*60)]
         
         D = np.abs(librosa.stft(y))
         D_db = librosa.amplitude_to_db(D, ref=np.max)
@@ -187,8 +188,8 @@ def upload_audio():
         plot_url = base64.b64encode(buf.getvalue()).decode()
 
         # Save the uploaded file temporarily
-        temp_filename = 'uploaded_audio.wav' if file.filename.endswith('.wav') else 'uploaded_audio.mp3'
-        file.save(temp_filename)
+        #temp_filename = 'uploaded_audio.wav' if file.filename.endswith('.wav') else 'uploaded_audio.mp3'
+        #file.save(temp_filename)
         
         frequencies,amplitudes= process_audio(y)
         
@@ -394,6 +395,7 @@ def process_audio(audio_data):
     if audio_data.ndim > 1 and audio_data.shape[1] > 1:
         print("Audio has more than one channel. Using the first channel.")
         audio_data = audio_data[:, 0]  # Select the first channel
+        
     L = len(audio_data)
     Y = fft(audio_data.flatten())
     P2 = np.abs(Y / L)
